@@ -16,6 +16,19 @@ app.get("/game", (req: Request, res: Response) => {
 });
 
 /**
+ * GET /game/summary
+ * return final game summary after game is finished
+ */
+app.get("/game/summary", (req: Request, res: Response) => {
+  try {
+    const summary = game.getGameSummary();
+    res.json(summary);
+  } catch (err: any) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+/**
  * POST /bid
  * { "amount": number }
  * submit player bid
@@ -26,9 +39,27 @@ app.post("/bid", (req: Request, res: Response) => {
     return res.status(400).json({ error: "Invalid amount" }); // ensure number
   }
 
+  // Check if player has enough budget
+  const currentSnapshot = game.snapshot();
+  const playerBalance = currentSnapshot.balances.Player;
+  if (amount > playerBalance) {
+    return res.status(400).json({
+      error: `Insufficient funds. You have $${playerBalance} but tried to bid $${amount}`,
+    });
+  }
+
   try {
     const result = game.playRound(amount);
-    res.json(result);
+
+    if (result.finished) {
+      const gameSummary = game.getGameSummary();
+      res.json({
+        ...result,
+        gameSummary,
+      });
+    } else {
+      res.json(result);
+    }
   } catch (err: any) {
     res.status(400).json({ error: err.message });
   }

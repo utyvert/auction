@@ -1,12 +1,12 @@
 import {
   Bidder,
-  BidderOne,
   BidderState,
-  BidderThree,
-  BidderTwo,
+  KellyBidder,
+  MonteCarloBidder,
+  SniperBidder,
 } from "./bidders.js";
 
-type PlayerId = "Player" | "one" | "two" | "three";
+type PlayerId = "Player" | "sniper" | "kelly" | "monte";
 
 export interface RoundSummary {
   round: number;
@@ -17,6 +17,15 @@ export interface RoundSummary {
   finished: boolean;
 }
 
+export interface GameSummary {
+  totalRounds: number;
+  propertyOwnership: Record<PlayerId, string[]>;
+  propertyCounts: Record<PlayerId, number>;
+  finalBalances: Record<PlayerId, number>;
+  gameWinner: PlayerId;
+  winnersByMostProperties: PlayerId[];
+}
+
 export class Game {
   private readonly properties = Array.from(
     { length: 10 },
@@ -24,18 +33,19 @@ export class Game {
   );
   private readonly budgets: Record<PlayerId, number> = {
     Player: 1000,
-    one: 1000,
-    two: 1000,
-    three: 1000,
+    sniper: 1000,
+    kelly: 1000,
+    monte: 1000,
   };
   private readonly winningBidHistory: number[] = [];
+  private readonly propertyOwners: Record<string, PlayerId> = {};
   private round = 0;
 
   // bots
   private readonly bots: Bidder[] = [
-    new BidderOne(),
-    new BidderTwo(),
-    new BidderThree(),
+    new SniperBidder(),
+    new KellyBidder(),
+    new MonteCarloBidder(),
   ];
 
   // player bids
@@ -47,9 +57,9 @@ export class Game {
     // bids
     const bids: Record<PlayerId, number> = {
       Player: playerBid,
-      one: 0,
-      two: 0,
-      three: 0,
+      sniper: 0,
+      kelly: 0,
+      monte: 0,
     };
 
     // bots bid
@@ -65,11 +75,15 @@ export class Game {
 
     // winner calc
     const entries = Object.entries(bids) as [PlayerId, number][];
-    // Higher bid wins; ties → earliest in list (biased toward Player)
+    // player biased
     const [winner, highest] = entries.reduce(
       (acc, cur) => (cur[1] > acc[1] ? cur : acc),
       ["Player", 0] as [PlayerId, number]
     );
+
+    // tracking
+    const currentProperty = this.properties[this.round];
+    this.propertyOwners[currentProperty] = winner;
 
     // balances
     entries.forEach(([id, bid]) => {
@@ -100,6 +114,52 @@ export class Game {
       property: this.properties[this.round] ?? null,
       balances: { ...this.budgets },
       finished: this.round >= this.properties.length,
+    };
+  }
+
+  getGameSummary(): GameSummary {
+    if (this.round < this.properties.length) {
+      throw new Error("Game not finished yet");
+    }
+
+    const propertyOwnership: Record<PlayerId, string[]> = {
+      Player: [],
+      sniper: [],
+      kelly: [],
+      monte: [],
+    };
+
+    // group properties
+    Object.entries(this.propertyOwners).forEach(([property, owner]) => {
+      propertyOwnership[owner].push(property);
+    });
+
+    // count
+    const propertyCounts: Record<PlayerId, number> = {
+      Player: propertyOwnership.Player.length,
+      sniper: propertyOwnership.sniper.length,
+      kelly: propertyOwnership.kelly.length,
+      monte: propertyOwnership.monte.length,
+    };
+
+    // winner
+    const maxProperties = Math.max(...Object.values(propertyCounts));
+    const winnersByMostProperties = (
+      Object.keys(propertyCounts) as PlayerId[]
+    ).filter((player) => propertyCounts[player] === maxProperties);
+
+    //player biased winner
+    const gameWinner = winnersByMostProperties.includes("Player")
+      ? "Player"
+      : winnersByMostProperties[0];
+
+    return {
+      totalRounds: this.properties.length,
+      propertyOwnership,
+      propertyCounts,
+      finalBalances: { ...this.budgets },
+      gameWinner,
+      winnersByMostProperties,
     };
   }
 }

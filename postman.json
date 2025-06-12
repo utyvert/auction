@@ -1,0 +1,118 @@
+{
+  "info": {
+    "name": "auction API",
+    "description": "endpoints for auction",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Get Game",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/game",
+          "host": ["{{baseUrl}}"],
+          "path": ["game"]
+        },
+        "description": "Get current game status including balances and next property"
+      },
+      "response": []
+    },
+    {
+      "name": "Submit Bid",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"amount\": {{bidAmount}}\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/bid",
+          "host": ["{{baseUrl}}"],
+          "path": ["bid"]
+        },
+        "description": "Submit your bid amount. Change {{bidAmount}} variable or edit the amount directly in the body."
+      },
+      "response": []
+    },
+    {
+      "name": "Get Game Summary (after game is finished)",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/game/summary",
+          "host": ["{{baseUrl}}"],
+          "path": ["game", "summary"]
+        },
+        "description": "Get final game summary (only works after game is finished)"
+      },
+      "response": []
+    },
+    {
+      "name": "Test Invalid Bid (Negative)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"amount\": -50\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/bid",
+          "host": ["{{baseUrl}}"],
+          "path": ["bid"]
+        },
+        "description": "Test error handling with negative bid"
+      },
+      "response": []
+    },
+    {
+      "name": "Test Invalid Bid (Over Budget)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"amount\": 9999\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/bid",
+          "host": ["{{baseUrl}}"],
+          "path": ["bid"]
+        },
+        "description": "Test error handling when bidding more than available budget"
+      },
+      "response": []
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000",
+      "type": "string"
+    },
+    {
+      "key": "bidAmount",
+      "value": "100",
+      "type": "string"
+    }
+  ]
+} 

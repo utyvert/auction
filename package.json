@@ -1,8 +1,12 @@
 {
   "name": "auction-takehome",
   "version": "1.0.0",
+  "type": "module",
   "main": "index.js",
   "scripts": {
+    "dev": "nodemon --exec tsx src/index.ts",
+    "build": "tsc",
+    "start": "node dist/index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
@@ -12,7 +16,10 @@
     "express": "^4.19.2"
   },
   "devDependencies": {
+    "@types/express": "^4.17.21",
     "@types/node": "^24.0.1",
+    "nodemon": "^3.0.2",
+    "tsx": "^4.7.0",
     "typescript": "^5.8.3"
   },
   "description": ""
